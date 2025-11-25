@@ -19,6 +19,7 @@ export type Database = {
           additional_info: string | null
           address: string | null
           created_at: string | null
+          embedding: string | null
           health_condition: string | null
           help_needed: string | null
           id: string
@@ -41,6 +42,7 @@ export type Database = {
           additional_info?: string | null
           address?: string | null
           created_at?: string | null
+          embedding?: string | null
           health_condition?: string | null
           help_needed?: string | null
           id?: string
@@ -63,6 +65,7 @@ export type Database = {
           additional_info?: string | null
           address?: string | null
           created_at?: string | null
+          embedding?: string | null
           health_condition?: string | null
           help_needed?: string | null
           id?: string
@@ -88,7 +91,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      find_similar_reports: {
+        Args: {
+          match_limit?: number
+          query_embedding: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          address: string
+          id: string
+          name: string
+          phone: string[]
+          raw_message: string
+          similarity: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
