@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Save, AlertCircle, Loader2, FileText } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, Loader2, FileText, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
@@ -45,6 +45,7 @@ const Review = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
+  const [isCompletingAddress, setIsCompletingAddress] = useState(false);
 
   useEffect(() => {
     const extractedData = location.state?.extractedData;
@@ -92,6 +93,36 @@ const Review = () => {
     }
   };
 
+  const handleCompleteAddress = async () => {
+    if (!formData?.address || formData.address === '-') {
+      toast.error('ไม่มีที่อยู่ให้เติม');
+      return;
+    }
+
+    setIsCompletingAddress(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('complete-address', {
+        body: { address: formData.address }
+      });
+
+      if (error) throw error;
+
+      if (data.completedAddress) {
+        setFormData({ ...formData, address: data.completedAddress });
+        toast.success('เติมที่อยู่สำเร็จ', {
+          description: 'กรุณาตรวจสอบความถูกต้องอีกครั้ง'
+        });
+      }
+    } catch (err) {
+      console.error('Address completion error:', err);
+      toast.error('ไม่สามารถเติมที่อยู่ได้', {
+        description: 'กรุณาลองใหม่อีกครั้ง'
+      });
+    } finally {
+      setIsCompletingAddress(false);
+    }
+  };
 
   const performSave = async () => {
     if (!formData) return;
@@ -327,7 +358,28 @@ const Review = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">ที่อยู่</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="address">ที่อยู่</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCompleteAddress}
+                  disabled={isCompletingAddress || !formData.address || formData.address === '-'}
+                >
+                  {isCompletingAddress ? (
+                    <>
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      กำลังเติม...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-1 h-3 w-3" />
+                      เติมที่อยู่ด้วย AI
+                    </>
+                  )}
+                </Button>
+              </div>
               <Textarea
                 id="address"
                 value={formData.address || '-'}
