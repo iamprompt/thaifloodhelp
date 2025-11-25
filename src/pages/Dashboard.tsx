@@ -121,6 +121,7 @@ const Dashboard = () => {
         'สถานะ',
         'ตำแหน่ง (Latitude)',
         'ตำแหน่ง (Longitude)',
+        'Google Maps Link',
         'วันที่บันทึก',
         'แก้ไขล่าสุด',
       ];
@@ -147,6 +148,7 @@ const Dashboard = () => {
           report.status || '',
           report.location_lat || '',
           report.location_long || '',
+          report.map_link || '',
           new Date(report.created_at).toLocaleString('th-TH'),
           new Date(report.updated_at).toLocaleString('th-TH'),
         ].join(',');
@@ -607,7 +609,21 @@ const Dashboard = () => {
                               </Badge>
                             </TableCell>
                             <TableCell className="font-medium">
-                              {report.name} {report.lastname}
+                              <div className="flex items-center gap-2">
+                                {report.name} {report.lastname}
+                                {report.map_link && (
+                                  <a 
+                                    href={report.map_link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:text-primary/80"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="เปิด Google Maps"
+                                  >
+                                    🗺️
+                                  </a>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className="max-w-[150px] truncate">{report.address}</TableCell>
                             <TableCell className="whitespace-nowrap">
