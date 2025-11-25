@@ -401,20 +401,17 @@ const Dashboard = () => {
                       const isExpanded = expandedRows.has(report.id);
                       return (
                         <>
-                          <TableRow key={report.id}>
+                          <TableRow 
+                            key={report.id} 
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => toggleRowExpansion(report.id)}
+                          >
                             <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleRowExpansion(report.id)}
-                                className="h-8 w-8 p-0"
-                              >
-                                {isExpanded ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                              </Button>
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
                             </TableCell>
                             <TableCell>
                               <Badge className={getUrgencyBadgeClass(report.urgency_level)}>
