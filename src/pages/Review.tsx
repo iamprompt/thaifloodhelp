@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Save, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, Loader2, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -99,7 +99,7 @@ const Review = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <Button
           variant="ghost"
           onClick={() => navigate('/')}
@@ -109,16 +109,33 @@ const Review = () => {
           กลับไปกรอกใหม่
         </Button>
 
-        <Card className="shadow-lg">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl">ตรวจสอบและแก้ไขข้อมูล</CardTitle>
-              <Badge className={urgencyColors[formData.urgency_level - 1]}>
-                เร่งด่วนระดับ {formData.urgency_level}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Raw Message Display */}
+          <Card className="shadow-lg lg:sticky lg:top-6 h-fit">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                ข้อความต้นฉบับ
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/50 rounded-lg p-4 whitespace-pre-wrap text-sm leading-relaxed max-h-[70vh] overflow-y-auto">
+                {formData.raw_message}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Extraction Form */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl">ข้อมูลที่แยกได้</CardTitle>
+                <Badge className={urgencyColors[formData.urgency_level - 1]}>
+                  เร่งด่วนระดับ {formData.urgency_level}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -286,8 +303,9 @@ const Review = () => {
                 )}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
