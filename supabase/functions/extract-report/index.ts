@@ -56,6 +56,7 @@ EXTRACTION GUIDELINES:
 - number_of_patients: Count people with medical conditions only if stated (0 if not present)
 - health_condition: Only mention if health issues are stated like "ป่วย", "โรคหัวใจ" (empty if not present)
 - help_needed: Only if specifically requested like "ต้องการเรือ", "ขาดอาหาร" (empty if not present)
+- help_categories: Array of category IDs for help types mentioned - water (ขาดน้ำดื่ม), food (ขาดอาหาร), electricity (ขาดไฟฟ้า), shelter (ต้องการที่พักพิง), medical (คนเจ็บ/ต้องการรักษา), medicine (ขาดยา), evacuation (ต้องการอพยพ), missing (คนหาย), clothes (เสื้อผ้า), other (อื่นๆ) (empty array if not present)
 - additional_info: Other important details not covered above (empty if not present)
 
 EXAMPLE OF CORRECT EXTRACTION:
@@ -157,6 +158,14 @@ REMEMBER: When in doubt, leave it empty. Wrong data is worse than no data in a d
                       type: 'string', 
                       description: 'ความช่วยเหลือที่ต้องการ เช่น เรือ อาหาร น้ำดื่ม ยา' 
                     },
+                    help_categories: { 
+                      type: 'array',
+                      items: { 
+                        type: 'string',
+                        enum: ['water', 'food', 'electricity', 'shelter', 'medical', 'medicine', 'evacuation', 'missing', 'clothes', 'other']
+                      },
+                      description: 'ประเภทความช่วยเหลือที่ต้องการ: water (ขาดน้ำดื่ม), food (ขาดอาหาร), electricity (ขาดไฟฟ้า), shelter (ต้องการที่พักพิง), medical (คนเจ็บ/ต้องการรักษา), medicine (ขาดยา), evacuation (ต้องการอพยพ), missing (คนหาย), clothes (เสื้อผ้า), other (อื่นๆ)' 
+                    },
                     additional_info: { 
                       type: 'string', 
                       description: 'ข้อมูลเพิ่มเติมที่สำคัญอื่นๆ ที่ควรบันทึก' 
@@ -226,9 +235,10 @@ REMEMBER: When in doubt, leave it empty. Wrong data is worse than no data in a d
                         number_of_adults: { type: 'integer', description: 'จำนวนผู้ใหญ่' },
                         number_of_children: { type: 'integer', description: 'จำนวนเด็ก (อายุต่ำกว่า 18 ปี)' },
                         number_of_seniors: { type: 'integer', description: 'จำนวนผู้สูงอายุ (อายุมากกว่า 60 ปี)' },
-                        health_condition: { type: 'string', description: 'ภาวะสุขภาพพิเศษ เช่น ป่วย พิการ ติดเตียง' },
-                        help_needed: { type: 'string', description: 'ความช่วยเหลือที่ต้องการ เช่น เรือ อาหาร น้ำดื่ม ยา' },
-                        additional_info: { type: 'string', description: 'ข้อมูลเพิ่มเติมที่สำคัญอื่นๆ ที่ควรบันทึก' },
+                         health_condition: { type: 'string', description: 'ภาวะสุขภาพพิเศษ เช่น ป่วย พิการ ติดเตียง' },
+                         help_needed: { type: 'string', description: 'ความช่วยเหลือที่ต้องการ เช่น เรือ อาหาร น้ำดื่ม ยา' },
+                         help_categories: { type: 'array', items: { type: 'string', enum: ['water', 'food', 'electricity', 'shelter', 'medical', 'medicine', 'evacuation', 'missing', 'clothes', 'other'] }, description: 'ประเภทความช่วยเหลือที่ต้องการ' },
+                         additional_info: { type: 'string', description: 'ข้อมูลเพิ่มเติมที่สำคัญอื่นๆ ที่ควรบันทึก' },
                         urgency_level: { type: 'integer', description: 'ระดับความเร่งด่วน 1-5 ตามเกณฑ์ที่กำหนด' }
                       },
                       required: []
@@ -281,6 +291,7 @@ REMEMBER: When in doubt, leave it empty. Wrong data is worse than no data in a d
         number_of_patients: extractedData.number_of_patients || 0,
             health_condition: extractedData.health_condition || '',
             help_needed: extractedData.help_needed || '',
+            help_categories: extractedData.help_categories || [],
             additional_info: extractedData.additional_info || '',
             name: extractedData.name || '',
             address: extractedData.address || '',
@@ -323,8 +334,11 @@ REMEMBER: When in doubt, leave it empty. Wrong data is worse than no data in a d
         number_of_adults: extractedData.number_of_adults || 0,
         number_of_children: extractedData.number_of_children || 0,
         number_of_seniors: extractedData.number_of_seniors || 0,
+        number_of_infants: extractedData.number_of_infants || 0,
+        number_of_patients: extractedData.number_of_patients || 0,
         health_condition: extractedData.health_condition || '',
         help_needed: extractedData.help_needed || '',
+        help_categories: extractedData.help_categories || [],
         additional_info: extractedData.additional_info || '',
         name: extractedData.name || '',
         address: extractedData.address || '',

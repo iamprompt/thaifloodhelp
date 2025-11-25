@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Save, AlertCircle, Loader2, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ interface ExtractedData {
   number_of_infants: number;
   health_condition: string;
   help_needed: string;
+  help_categories: string[];
   additional_info: string;
   urgency_level: number;
 }
@@ -126,6 +128,7 @@ const Review = () => {
         embedding: embeddingError ? null : embeddingData.embedding,
         number_of_patients: formData.number_of_patients || 0,
         number_of_infants: formData.number_of_infants || 0,
+        help_categories: formData.help_categories || [],
       };
 
       const { error } = await supabase.from('reports').insert([dataToSave]);
@@ -424,7 +427,45 @@ const Review = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="help">ความช่วยเหลือที่ต้องการ</Label>
+              <Label>ประเภทความช่วยเหลือที่ต้องการ</Label>
+              <div className="grid grid-cols-2 gap-3 p-4 bg-muted/30 rounded-lg">
+                {[
+                  { id: 'water', label: 'ขาดน้ำดื่ม' },
+                  { id: 'food', label: 'ขาดอาหาร' },
+                  { id: 'electricity', label: 'ขาดไฟฟ้า' },
+                  { id: 'shelter', label: 'ต้องการที่พักพิง' },
+                  { id: 'medical', label: 'คนเจ็บ/ต้องการรักษา' },
+                  { id: 'medicine', label: 'ขาดยา' },
+                  { id: 'evacuation', label: 'ต้องการอพยพ' },
+                  { id: 'missing', label: 'คนหาย' },
+                  { id: 'clothes', label: 'เสื้อผ้า' },
+                  { id: 'other', label: 'อื่นๆ' },
+                ].map((category) => (
+                  <div key={category.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={category.id}
+                      checked={formData.help_categories?.includes(category.id) || false}
+                      onCheckedChange={(checked) => {
+                        const current = formData.help_categories || [];
+                        const updated = checked
+                          ? [...current, category.id]
+                          : current.filter((c) => c !== category.id);
+                        setFormData({ ...formData, help_categories: updated });
+                      }}
+                    />
+                    <label
+                      htmlFor={category.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {category.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="help">รายละเอียดความช่วยเหลือเพิ่มเติม</Label>
               <Textarea
                 id="help"
                 value={formData.help_needed || '-'}

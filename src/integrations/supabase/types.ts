@@ -21,6 +21,7 @@ export type Database = {
           created_at: string | null
           embedding: string | null
           health_condition: string | null
+          help_categories: string[] | null
           help_needed: string | null
           id: string
           last_contact_at: string | null
@@ -46,6 +47,7 @@ export type Database = {
           created_at?: string | null
           embedding?: string | null
           health_condition?: string | null
+          help_categories?: string[] | null
           help_needed?: string | null
           id?: string
           last_contact_at?: string | null
@@ -71,6 +73,7 @@ export type Database = {
           created_at?: string | null
           embedding?: string | null
           health_condition?: string | null
+          help_categories?: string[] | null
           help_needed?: string | null
           id?: string
           last_contact_at?: string | null
