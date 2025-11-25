@@ -1,18 +1,134 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Droplets, Loader2 } from "lucide-react";
+import { AlertCircle, Droplets, Loader2, ImagePlus, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import Tesseract from "tesseract.js";
 
 const Input = () => {
   const [rawMessage, setRawMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
   const [error, setError] = useState("");
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  const processImageFile = async (file: File) => {
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError("ไฟล์รูปภาพต้องมีขนาดไม่เกิน 10MB");
+      return;
+    }
+
+    setError("");
+    setIsOcrProcessing(true);
+    setOcrProgress(0);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPreviewImage(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      toast.info("กำลังอ่านข้อความจากรูปภาพ...", {
+        description: "กระบวนการนี้อาจใช้เวลาสักครู่",
+      });
+
+      const result = await Tesseract.recognize(file, "tha+eng", {
+        logger: (m) => {
+          if (m.status === "recognizing text") {
+            setOcrProgress(Math.round(m.progress * 100));
+          }
+        },
+      });
+
+      const extractedText = result.data.text.trim();
+
+      if (extractedText) {
+        // Clean the extracted text
+        const cleanedText = extractedText
+          .replace(/[\u200B-\u200D\uFEFF]/g, "") // Remove zero-width characters
+          .replace(/[^\S\r\n]+/g, " ") // Normalize spaces
+          .trim();
+
+        setRawMessage((prev) =>
+          prev ? prev + "\n\n" + cleanedText : cleanedText
+        );
+        toast.success("อ่านข้อความสำเร็จ", {
+          description: "ข้อความถูกเพิ่มในช่องด้านล่างแล้ว",
+        });
+      } else {
+        toast.warning("ไม่พบข้อความในรูปภาพ", {
+          description: "กรุณาลองใช้รูปภาพที่มีข้อความชัดเจนกว่านี้",
+        });
+      }
+    } catch (err) {
+      console.error("OCR error:", err);
+      setError("ไม่สามารถอ่านข้อความจากรูปภาพได้");
+      toast.error("เกิดข้อผิดพลาด", {
+        description: "ไม่สามารถอ่านข้อความจากรูปภาพได้",
+      });
+    } finally {
+      setIsOcrProcessing(false);
+      setOcrProgress(0);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processImageFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isOcrProcessing && !isProcessing) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (isOcrProcessing || isProcessing) return;
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await processImageFile(file);
+    }
+  };
+
+  const clearPreviewImage = () => {
+    setPreviewImage(null);
+  };
 
   const handleProcess = async () => {
     if (!rawMessage.trim()) {
@@ -81,16 +197,106 @@ const Input = () => {
               วิธีใช้งาน
             </CardTitle>
             <CardDescription className="text-base">
-              1. คัดลอกข้อความจากโซเชียล (Facebook, Twitter, Line ฯลฯ)
+              1. คัดลอกข้อความจากโซเชียล (Facebook, Twitter, Line ฯลฯ) หรืออัพโหลดรูปภาพ
               <br />
-              2. วางข้อความในช่องด้านล่าง
+              2. วางข้อความในช่องด้านล่าง หรือใช้ปุ่ม "อัพโหลดรูปภาพ" เพื่อดึงข้อความจากรูป
               <br />
               3. กดปุ่ม "ประมวลผลด้วย AI" แล้วรอสักครู่
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Image Upload Section with Drag & Drop */}
+            <div className="space-y-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+                disabled={isOcrProcessing || isProcessing}
+              />
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => !isOcrProcessing && !isProcessing && fileInputRef.current?.click()}
+                className={`
+                  w-full h-24 border-2 border-dashed rounded-lg cursor-pointer
+                  flex flex-col items-center justify-center gap-2
+                  transition-all duration-200
+                  ${isDragging
+                    ? "border-primary bg-primary/10 scale-[1.02]"
+                    : "border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/50"
+                  }
+                  ${(isOcrProcessing || isProcessing) ? "opacity-50 cursor-not-allowed" : ""}
+                `}
+              >
+                {isOcrProcessing ? (
+                  <>
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">
+                      กำลังอ่านข้อความ... {ocrProgress}%
+                    </span>
+                  </>
+                ) : isDragging ? (
+                  <>
+                    <ImagePlus className="h-6 w-6 text-primary" />
+                    <span className="text-sm text-primary font-medium">
+                      ปล่อยเพื่ออัพโหลดรูปภาพ
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground text-center">
+                      ลากรูปภาพมาวางที่นี่ หรือ <span className="text-primary underline">คลิกเพื่อเลือกไฟล์</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground/70">
+                      รองรับภาษาไทยและอังกฤษ (OCR)
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* OCR Progress Bar */}
+              {isOcrProcessing && (
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-primary h-full transition-all duration-300"
+                    style={{ width: `${ocrProgress}%` }}
+                  />
+                </div>
+              )}
+
+              {/* Image Preview */}
+              {previewImage && (
+                <div className="relative">
+                  <img
+                    src={previewImage}
+                    alt="Preview"
+                    className="w-full max-h-48 object-contain rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8"
+                    onClick={clearPreviewImage}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="relative flex items-center">
+              <div className="flex-grow border-t border-muted"></div>
+              <span className="px-4 text-sm text-muted-foreground">หรือ</span>
+              <div className="flex-grow border-t border-muted"></div>
+            </div>
+
             <Textarea
-              placeholder="วางข้อความที่คัดลอกมาที่นี่... 
+              placeholder="วางข้อความหรือรูปภาพที่นี่ (Ctrl+V / Cmd+V)...
 
 ตัวอย่าง:
 ด่วน! ขอความช่วยเหลือ
@@ -105,6 +311,22 @@ const Input = () => {
                 setError("");
               }}
               onPaste={(e) => {
+                // Check for image in clipboard first
+                const items = e.clipboardData?.items;
+                if (items) {
+                  for (const item of items) {
+                    if (item.type.startsWith("image/")) {
+                      e.preventDefault();
+                      const file = item.getAsFile();
+                      if (file) {
+                        processImageFile(file);
+                      }
+                      return;
+                    }
+                  }
+                }
+
+                // Handle text paste
                 e.preventDefault();
                 const pastedText = e.clipboardData.getData('text/plain');
                 // Clean text: remove hidden characters, normalize whitespace
@@ -116,7 +338,7 @@ const Input = () => {
                 setError("");
               }}
               className="min-h-[300px] text-base font-normal resize-none"
-              disabled={isProcessing}
+              disabled={isProcessing || isOcrProcessing}
             />
 
             {error && (
@@ -128,7 +350,7 @@ const Input = () => {
 
             <Button
               onClick={handleProcess}
-              disabled={isProcessing || !rawMessage.trim()}
+              disabled={isProcessing || isOcrProcessing || !rawMessage.trim()}
               size="lg"
               className="w-full text-lg h-14"
             >
