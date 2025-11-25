@@ -58,6 +58,7 @@ const Dashboard = () => {
   const [urgencyFilter, setUrgencyFilter] = useState<number | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [forceDeepSearch, setForceDeepSearch] = useState(false);
 
   useEffect(() => {
     fetchReports();
@@ -112,7 +113,8 @@ const Dashboard = () => {
           body: { 
             query: searchTerm,
             urgencyFilter: urgencyFilter,
-            limit: 100
+            limit: 100,
+            forceSemanticSearch: forceDeepSearch
           }
         });
 
@@ -155,7 +157,7 @@ const Dashboard = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [reports, searchTerm, urgencyFilter, selectedCategories]);
+  }, [reports, searchTerm, urgencyFilter, selectedCategories, forceDeepSearch]);
 
   const fetchReports = async () => {
     setIsLoading(true);
@@ -263,6 +265,13 @@ const Dashboard = () => {
                     </div>
                   )}
                 </div>
+                <Button
+                  variant={forceDeepSearch ? "default" : "outline"}
+                  onClick={() => setForceDeepSearch(!forceDeepSearch)}
+                  className="whitespace-nowrap"
+                >
+                  🔍 Deep Search (AI)
+                </Button>
               </div>
               
               {/* Urgency Filter */}

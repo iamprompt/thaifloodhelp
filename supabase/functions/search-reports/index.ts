@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, urgencyFilter = null, limit = 100 } = await req.json();
+    const { query, urgencyFilter = null, limit = 100, forceSemanticSearch = false } = await req.json();
 
     if (!query || typeof query !== 'string') {
       return new Response(
@@ -25,39 +25,42 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Searching for:', query);
+    console.log('Searching for:', query, 'Force semantic:', forceSemanticSearch);
 
-    // First, try exact/partial text search on key fields (phone, name, address)
-    let textSearchQuery = supabase
-      .from('reports')
-      .select('*')
-      .or(`name.ilike.%${query}%,lastname.ilike.%${query}%,address.ilike.%${query}%,reporter_name.ilike.%${query}%,phone.cs.{${query}},health_condition.ilike.%${query}%,help_needed.ilike.%${query}%,additional_info.ilike.%${query}%`);
+    // Skip text search if forceSemanticSearch is true
+    if (!forceSemanticSearch) {
+      // First, try exact/partial text search on key fields (phone, name, address)
+      let textSearchQuery = supabase
+        .from('reports')
+        .select('*')
+        .or(`name.ilike.%${query}%,lastname.ilike.%${query}%,address.ilike.%${query}%,reporter_name.ilike.%${query}%,phone.cs.{${query}},health_condition.ilike.%${query}%,help_needed.ilike.%${query}%,additional_info.ilike.%${query}%`);
 
-    if (urgencyFilter !== null) {
-      textSearchQuery = textSearchQuery.eq('urgency_level', urgencyFilter);
-    }
+      if (urgencyFilter !== null) {
+        textSearchQuery = textSearchQuery.eq('urgency_level', urgencyFilter);
+      }
 
-    const { data: textResults, error: textError } = await textSearchQuery
-      .order('updated_at', { ascending: false })
-      .limit(limit);
+      const { data: textResults, error: textError } = await textSearchQuery
+        .order('updated_at', { ascending: false })
+        .limit(limit);
 
-    if (textError) {
-      console.error('Text search error:', textError);
-      // Don't throw, just log and continue to semantic search
-    }
+      if (textError) {
+        console.error('Text search error:', textError);
+        // Don't throw, just log and continue to semantic search
+      }
 
-    console.log('Text search found', textResults?.length || 0, 'results');
+      console.log('Text search found', textResults?.length || 0, 'results');
 
-    // If we found exact matches, return them immediately
-    if (textResults && textResults.length > 0) {
-      return new Response(
-        JSON.stringify({ 
-          reports: textResults,
-          count: textResults.length,
-          searchType: 'exact'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // If we found exact matches, return them immediately
+      if (textResults && textResults.length > 0) {
+        return new Response(
+          JSON.stringify({ 
+            reports: textResults,
+            count: textResults.length,
+            searchType: 'exact'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // If no exact matches, fall back to semantic vector search
