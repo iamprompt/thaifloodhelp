@@ -53,6 +53,7 @@ interface Report {
   raw_message: string;
   location_lat: number | null;
   location_long: number | null;
+  map_link: string | null;
 }
 
 const Dashboard = () => {
@@ -445,11 +446,24 @@ const Dashboard = () => {
                                     <div>
                                       <h4 className="font-semibold mb-2">ข้อมูลทั่วไป</h4>
                                       <div className="space-y-1 text-sm">
-                                        <p className="break-words"><span className="font-medium">ชื่อ:</span> {report.name} {report.lastname}</p>
-                                        <p className="break-words"><span className="font-medium">ผู้รายงาน:</span> {report.reporter_name || '-'}</p>
-                                        <p className="break-words"><span className="font-medium">ที่อยู่:</span> {report.address || '-'}</p>
-                                        <p className="break-words"><span className="font-medium">เบอร์โทร:</span> {report.phone?.length > 0 ? report.phone.join(', ') : '-'}</p>
-                                        <p className="break-words"><span className="font-medium">ตำแหน่ง:</span> {report.location_lat && report.location_long ? `${report.location_lat}, ${report.location_long}` : '-'}</p>
+                                         <p className="break-words"><span className="font-medium">ชื่อ:</span> {report.name} {report.lastname}</p>
+                                         <p className="break-words"><span className="font-medium">ผู้รายงาน:</span> {report.reporter_name || '-'}</p>
+                                         <p className="break-words"><span className="font-medium">ที่อยู่:</span> {report.address || '-'}</p>
+                                         <p className="break-words"><span className="font-medium">เบอร์โทร:</span> {report.phone?.length > 0 ? report.phone.join(', ') : '-'}</p>
+                                         <p className="break-words"><span className="font-medium">ตำแหน่ง:</span> {report.location_lat && report.location_long ? `${report.location_lat}, ${report.location_long}` : '-'}</p>
+                                         {report.map_link && (
+                                           <p className="break-words">
+                                             <span className="font-medium">Google Maps:</span>{' '}
+                                             <a 
+                                               href={report.map_link} 
+                                               target="_blank" 
+                                               rel="noopener noreferrer"
+                                               className="text-primary hover:underline"
+                                             >
+                                               เปิดแผนที่ 🗺️
+                                             </a>
+                                           </p>
+                                         )}
                                       </div>
                                     </div>
                                     <div>
