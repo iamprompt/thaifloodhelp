@@ -73,6 +73,7 @@ const Review = () => {
 
       const dataToSave = {
         ...formData,
+        name: formData.name && formData.name !== '-' ? formData.name : 'ไม่ระบุชื่อ',
         phone: phones,
         location_lat: formData.location_lat ? parseFloat(formData.location_lat) : null,
         location_long: formData.location_long ? parseFloat(formData.location_long) : null,
@@ -203,12 +204,12 @@ const Review = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">ชื่อ *</Label>
+                <Label htmlFor="name">ชื่อ</Label>
                 <Input
                   id="name"
-                  value={formData.name}
+                  value={formData.name || '-'}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
+                  placeholder="-"
                 />
               </div>
 
@@ -223,14 +224,13 @@ const Review = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">ที่อยู่ *</Label>
+              <Label htmlFor="address">ที่อยู่</Label>
               <Textarea
                 id="address"
                 value={formData.address || '-'}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 rows={3}
                 placeholder="-"
-                required
               />
             </div>
 
@@ -353,28 +353,10 @@ const Review = () => {
               </select>
             </div>
 
-            {/* Validation Alert */}
-            {(!formData.name || formData.name.trim() === '' || !formData.address || formData.address.trim() === '') && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  กรุณากรอกข้อมูลที่จำเป็น: 
-                  {(!formData.name || formData.name.trim() === '') && ' ชื่อ'}
-                  {(!formData.address || formData.address.trim() === '') && ' ที่อยู่'}
-                </AlertDescription>
-              </Alert>
-            )}
-
             <div className="flex gap-4">
               <Button
                 onClick={handleSave}
-                disabled={
-                  isSaving || 
-                  !formData.name || 
-                  formData.name.trim() === '' ||
-                  !formData.address || 
-                  formData.address.trim() === ''
-                }
+                disabled={isSaving}
                 size="lg"
                 className="flex-1"
               >
