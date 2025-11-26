@@ -356,6 +356,11 @@ const Dashboard = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             กลับไปหน้าแรก
           </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/map')}>
+              🗺️ แผนที่
+            </Button>
+          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -713,9 +718,9 @@ const Dashboard = () => {
                             </TableCell>
                             <TableCell className="text-center">
                               {report.map_link ? (
-                                <a 
-                                  href={report.map_link} 
-                                  target="_blank" 
+                                <a
+                                  href={report.map_link}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center justify-center text-primary hover:text-primary/80 transition-colors"
                                   onClick={(e) => e.stopPropagation()}
@@ -814,18 +819,18 @@ const Dashboard = () => {
                                         </div>
                                         <p className="break-words"><span className="font-medium">ตำแหน่ง:</span> {report.location_lat && report.location_long ? `${report.location_lat}, ${report.location_long}` : '-'}</p>
                                         {report.map_link && (
-                                           <p className="break-words">
-                                             <span className="font-medium">Google Maps:</span>{' '}
-                                             <a 
-                                               href={report.map_link} 
-                                               target="_blank" 
-                                               rel="noopener noreferrer"
-                                               className="text-primary hover:underline"
-                                             >
-                                               เปิดแผนที่ 🗺️
-                                             </a>
-                                           </p>
-                                         )}
+                                          <p className="break-words">
+                                            <span className="font-medium">Google Maps:</span>{' '}
+                                            <a
+                                              href={report.map_link}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-primary hover:underline"
+                                            >
+                                              เปิดแผนที่ 🗺️
+                                            </a>
+                                          </p>
+                                        )}
                                       </div>
                                     </div>
                                     <div>
