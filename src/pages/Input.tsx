@@ -190,11 +190,24 @@ const Input = () => {
             }
           }
 
-          // Step 2: Geocode address if still no coordinates (silent - no user notification)
+          // Step 2: Complete address with AI then geocode if still no coordinates (silent - no user notification)
           if (!updatedReport.location_lat && !updatedReport.location_long && report.address && report.address !== '-') {
             try {
-              const { data: geoData } = await supabase.functions.invoke('geocode-address', {
+              // First, complete the address with AI
+              const { data: completionData } = await supabase.functions.invoke('complete-address', {
                 body: { address: report.address }
+              });
+
+              let addressToGeocode = report.address;
+              if (completionData?.completedAddress) {
+                addressToGeocode = completionData.completedAddress;
+                updatedReport.address = completionData.completedAddress;
+                console.log(`✓ Completed address: ${completionData.completedAddress}`);
+              }
+
+              // Then, geocode the completed address
+              const { data: geoData } = await supabase.functions.invoke('geocode-address', {
+                body: { address: addressToGeocode }
               });
 
               if (geoData?.success && geoData.lat && geoData.lng) {
@@ -207,8 +220,8 @@ const Input = () => {
                 console.log('Address geocoding not available for this location');
               }
             } catch (err) {
-              // Silent fail - geocoding is optional, many addresses cannot be geocoded
-              console.log('Address could not be geocoded');
+              // Silent fail - address completion and geocoding are optional
+              console.log('Address could not be completed or geocoded');
             }
           }
 

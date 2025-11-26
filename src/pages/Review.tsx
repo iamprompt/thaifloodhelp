@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Save, AlertCircle, Loader2, FileText, Sparkles, LogIn, Bell, AlertTriangle } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArrowLeft, Save, AlertCircle, FileText, LogIn, Bell, AlertTriangle, Loader2 } from "lucide-react";
 import { DraggableMap } from "@/components/DraggableMap";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -59,7 +58,6 @@ const Review = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
-  const [isCompletingAddress, setIsCompletingAddress] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const { isLoggedIn, profile } = useLiff();
   const { user } = useAuth();
@@ -119,43 +117,6 @@ const Review = () => {
       console.error('Error checking duplicates:', err);
       // On error, return empty array to proceed with save
       return [];
-    }
-  };
-
-  const handleCompleteAddress = async () => {
-    if (!formData?.address || formData.address === '-') {
-      toast.error('ไม่มีที่อยู่ให้เติม');
-      return;
-    }
-
-    setIsCompletingAddress(true);
-
-    try {
-      // Complete the address with AI only
-      const { data: completionData, error: completionError } = await supabase.functions.invoke('complete-address', {
-        body: { address: formData.address }
-      });
-
-      if (completionError) throw completionError;
-
-      if (!completionData.completedAddress) {
-        toast.error('ไม่สามารถเติมที่อยู่ได้');
-        return;
-      }
-
-      const completedAddress = completionData.completedAddress;
-      console.log('✓ Completed address:', completedAddress);
-
-      // Update only the address field
-      setFormData({ ...formData, address: completedAddress });
-      toast.success('เติมที่อยู่สำเร็จ');
-    } catch (err) {
-      console.error('Address completion error:', err);
-      toast.error('ไม่สามารถเติมที่อยู่ได้', {
-        description: 'กรุณาลองใหม่อีกครั้ง'
-      });
-    } finally {
-      setIsCompletingAddress(false);
     }
   };
 
@@ -431,28 +392,7 @@ const Review = () => {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="address">ที่อยู่</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCompleteAddress}
-                  disabled={isCompletingAddress || !formData.address || formData.address === '-'}
-                >
-                  {isCompletingAddress ? (
-                    <>
-                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                      กำลังเติม...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-1 h-3 w-3" />
-                      เติมที่อยู่ด้วย AI
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Label htmlFor="address">ที่อยู่</Label>
               <Textarea
                 id="address"
                 value={formData.address || '-'}
