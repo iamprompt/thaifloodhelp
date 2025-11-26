@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GOOGLE_MAPS_API_KEY = Deno.env.get('GOOGLE_MAPS_API_KEY');
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -20,99 +22,52 @@ serve(async (req) => {
       );
     }
 
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.error('GOOGLE_MAPS_API_KEY is not configured');
+      return new Response(
+        JSON.stringify({ error: "Geocoding service not configured" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+
     // Sanitize and prepare address for geocoding
     const cleanedAddress = address.trim();
     
-    console.log('Geocoding address:', cleanedAddress);
+    console.log('Geocoding address with Google Maps API:', cleanedAddress);
 
-    // Helper function to try geocoding
-    const tryGeocode = async (searchAddress: string) => {
-      const encodedAddress = encodeURIComponent(searchAddress);
-      const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=3&countrycodes=th&accept-language=th`;
-      
-      const response = await fetch(nominatimUrl, {
-        headers: {
-          'User-Agent': 'ThaiFloodHelp/1.0 (Disaster Relief Application)',
-        },
-      });
+    // Use Google Maps Geocoding API
+    const encodedAddress = encodeURIComponent(cleanedAddress);
+    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${GOOGLE_MAPS_API_KEY}&language=th&region=th`;
+    
+    const response = await fetch(geocodeUrl);
 
-      if (!response.ok) {
-        throw new Error(`Nominatim API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data && data.length > 0 ? data[0] : null;
-    };
-
-    // Strategy 1: Try exact address
-    let result = await tryGeocode(cleanedAddress);
-
-    // Strategy 2: If no results and address contains formal terms (ตำบล, อำเภอ, จังหวัด), 
-    // try simplified version without postal code
-    if (!result && /\d{5}/.test(cleanedAddress)) {
-      const withoutPostal = cleanedAddress.replace(/\s*\d{5}\s*$/, '');
-      console.log('Trying without postal code:', withoutPostal);
-      result = await tryGeocode(withoutPostal);
+    if (!response.ok) {
+      throw new Error(`Google Maps API error: ${response.status}`);
     }
 
-    // Strategy 3: Try replacing formal terms with abbreviations
-    if (!result) {
-      const abbreviated = cleanedAddress
-        .replace(/ตำบล/g, 'ต.')
-        .replace(/อำเภอ/g, 'อ.')
-        .replace(/จังหวัด/g, 'จ.')
-        .replace(/ถนน/g, 'ถ.')
-        .replace(/\s*\d{5}\s*$/, ''); // Also remove postal code
-      
-      if (abbreviated !== cleanedAddress) {
-        console.log('Trying abbreviated:', abbreviated);
-        result = await tryGeocode(abbreviated);
-      }
-    }
+    const data = await response.json();
 
-    // Strategy 4: Extract street/road + district/city only
-    if (!result) {
-      const streetMatch = cleanedAddress.match(/^[\d\/\-]+\s*(?:ถ\.|ถนน)?\s*([^\s]+)/);
-      const districtMatch = cleanedAddress.match(/(?:อ\.|อำเภอ)([^\s]+)/);
-      
-      if (streetMatch && districtMatch) {
-        const simplified = `${streetMatch[0]} อ.${districtMatch[1]}`;
-        console.log('Trying street + district:', simplified);
-        result = await tryGeocode(simplified);
-      }
-    }
-
-    // Strategy 5: Try just district/city name
-    if (!result) {
-      const cityMatch = cleanedAddress.match(/(?:อ\.|อำเภอ|ต\.|ตำบล)([^\s]+)/);
-      if (cityMatch) {
-        const cityOnly = cityMatch[0].replace(/ตำบล|อำเภอ/, '').replace(/^(อ\.|ต\.)/, '') + ' ' + cityMatch[1];
-        console.log('Trying city only:', cityOnly);
-        result = await tryGeocode(cityOnly);
-      }
-    }
-
-    // If we found a result from any strategy
-    if (result) {
-      const lat = parseFloat(result.lat);
-      const lng = parseFloat(result.lon);
+    if (data.status === 'OK' && data.results && data.results.length > 0) {
+      const result = data.results[0];
+      const lat = result.geometry.location.lat;
+      const lng = result.geometry.location.lng;
       const mapLink = `https://maps.google.com/?q=${lat},${lng}`;
 
-      console.log('Geocoding successful:', { lat, lng, mapLink });
+      console.log('Geocoding successful:', { lat, lng, mapLink, formatted_address: result.formatted_address });
 
       return new Response(
         JSON.stringify({
           lat,
           lng,
           map_link: mapLink,
-          display_name: result.display_name,
+          display_name: result.formatted_address,
           success: true
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log('No geocoding results found for address:', cleanedAddress);
+    console.log('No geocoding results found for address:', cleanedAddress, 'Status:', data.status);
 
     // Return success: false instead of error - this is a normal case
     return new Response(
@@ -121,7 +76,7 @@ serve(async (req) => {
         lng: null,
         map_link: null,
         success: false,
-        message: "Address could not be geocoded"
+        message: `Address could not be geocoded (${data.status})`
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
