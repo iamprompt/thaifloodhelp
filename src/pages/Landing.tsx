@@ -446,6 +446,7 @@ const Landing = () => {
                 icon: Github,
                 title: "สำหรับ Developer",
                 buttonText: "GitHub - Open Source",
+                buttonTextShort: "GitHub",
                 onClick: () => window.open('https://github.com', '_blank')
               },
               {
@@ -471,10 +472,11 @@ const Landing = () => {
                 </h3>
                 <Button 
                   size="lg"
-                  className="w-full h-14 text-lg bg-white text-blue-600 hover:bg-white/90 font-semibold rounded-xl shadow-lg"
+                  className="w-full h-14 text-base sm:text-lg bg-white text-blue-600 hover:bg-white/90 font-semibold rounded-xl shadow-lg"
                   onClick={item.onClick}
                 >
-                  {item.buttonText}
+                  <span className="hidden sm:inline">{item.buttonText}</span>
+                  <span className="sm:hidden">{'buttonTextShort' in item ? item.buttonTextShort : item.buttonText}</span>
                 </Button>
               </motion.div>
             ))}
