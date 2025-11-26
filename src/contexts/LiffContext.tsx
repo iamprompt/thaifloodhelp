@@ -101,6 +101,12 @@ export function LiffProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // If not in LIFF client and not logged in, redirect to LINE login first
+    if (!liff.isInClient() && !liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+
     if (!liff.isApiAvailable('shareTargetPicker')) {
       console.warn('ShareTargetPicker is not available');
       // Fallback: open LINE share URL
