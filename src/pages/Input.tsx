@@ -167,13 +167,57 @@ const Input = () => {
         phone: report.phone?.map((p: string) => formatPhoneNumber(p)) || []
       }));
 
+      // Process each report to convert map links and geocode addresses
+      const processedReports = await Promise.all(
+        (formattedReports || []).map(async (report: any) => {
+          let updatedReport = { ...report };
+
+          // Step 1: Parse map_link if exists but no coordinates
+          if (report.map_link && !report.location_lat && !report.location_long) {
+            try {
+              const { data: mapData, error: mapError } = await supabase.functions.invoke('parse-map-link', {
+                body: { mapLink: report.map_link }
+              });
+
+              if (!mapError && mapData?.success) {
+                updatedReport.location_lat = mapData.lat;
+                updatedReport.location_long = mapData.lng;
+                console.log(`Parsed map link for report: ${mapData.lat}, ${mapData.lng}`);
+              }
+            } catch (err) {
+              console.error('Map link parsing error:', err);
+            }
+          }
+
+          // Step 2: Geocode address if still no coordinates
+          if (!updatedReport.location_lat && !updatedReport.location_long && report.address) {
+            try {
+              const { data: geoData, error: geoError } = await supabase.functions.invoke('geocode-address', {
+                body: { address: report.address }
+              });
+
+              if (!geoError && geoData?.success) {
+                updatedReport.location_lat = geoData.lat;
+                updatedReport.location_long = geoData.lng;
+                updatedReport.map_link = geoData.map_link;
+                console.log(`Geocoded address for report: ${geoData.lat}, ${geoData.lng}`);
+              }
+            } catch (err) {
+              console.error('Geocoding error:', err);
+            }
+          }
+
+          return updatedReport;
+        })
+      );
+
       // Check if multiple reports were extracted
-      if (formattedReports && formattedReports.length > 1) {
+      if (processedReports && processedReports.length > 1) {
         // Navigate to selection page
-        navigate('/select', { state: { reports: formattedReports } });
-      } else if (formattedReports && formattedReports.length === 1) {
+        navigate('/select', { state: { reports: processedReports } });
+      } else if (processedReports && processedReports.length === 1) {
         // Single report - go directly to review
-        navigate('/review', { state: { extractedData: formattedReports[0] } });
+        navigate('/review', { state: { extractedData: processedReports[0] } });
       } else {
         throw new Error('ไม่พบข้อมูลที่สามารถแยกได้');
       }

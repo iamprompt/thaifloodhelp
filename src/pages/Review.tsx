@@ -180,68 +180,6 @@ const Review = () => {
       let finalLat = formData.location_lat ? parseFloat(formData.location_lat) : null;
       let finalLng = formData.location_long ? parseFloat(formData.location_long) : null;
       let finalMapLink = formData.map_link || null;
-      
-      // Step 1: Try to parse map_link if present and no coordinates yet
-      if (formData.map_link && formData.map_link !== '-' && (!finalLat || !finalLng)) {
-        try {
-          const { data: mapData, error: mapError } = await supabase.functions.invoke(
-            'parse-map-link',
-            { body: { mapLink: formData.map_link } }
-          );
-          
-          if (!mapError && mapData.success) {
-            finalLat = mapData.lat;
-            finalLng = mapData.lng;
-            console.log('Successfully parsed map link:', mapData);
-          }
-        } catch (err) {
-          console.error('Error parsing map link:', err);
-        }
-      }
-
-      // Step 2: If still no coordinates but have address, try geocoding
-      if ((!finalLat || !finalLng) && formData.address && formData.address !== '-') {
-        try {
-          toast.info('กำลังแปลงที่อยู่เป็นพิกัด...', { duration: 2000 });
-          
-          const { data: geocodeData, error: geocodeError } = await supabase.functions.invoke(
-            'geocode-address',
-            { body: { address: formData.address } }
-          );
-          
-          console.log('Geocode response:', geocodeData, geocodeError);
-          
-          if (!geocodeError && geocodeData && geocodeData.success) {
-            finalLat = geocodeData.lat;
-            finalLng = geocodeData.lng;
-            finalMapLink = geocodeData.map_link;
-            
-            // Update form data so user can see the coordinates
-            setFormData({
-              ...formData,
-              location_lat: geocodeData.lat.toString(),
-              location_long: geocodeData.lng.toString(),
-              map_link: geocodeData.map_link
-            });
-            
-            console.log('Successfully geocoded address:', geocodeData);
-            toast.success('แปลงที่อยู่เป็นพิกัดสำเร็จ', {
-              description: `lat: ${geocodeData.lat}, lng: ${geocodeData.lng}`
-            });
-          } else {
-            console.warn('Geocoding failed or returned no results:', geocodeError || geocodeData);
-            toast.warning('ไม่สามารถแปลงที่อยู่เป็นพิกัดได้', {
-              description: 'ระบบจะบันทึกโดยไม่มีตำแหน่ง'
-            });
-          }
-        } catch (err) {
-          console.error('Error geocoding address:', err);
-          toast.error('เกิดข้อผิดพลาดในการแปลงที่อยู่', {
-            description: err instanceof Error ? err.message : 'กรุณาลองใหม่อีกครั้ง'
-          });
-          // Continue with save even if geocoding fails
-        }
-      }
 
       // Generate embedding for the report
       const { data: embeddingData, error: embeddingError } = await supabase.functions.invoke(
