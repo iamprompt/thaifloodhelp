@@ -22,4 +22,6 @@ export interface Report {
   location_lat: number | null;
   location_long: number | null;
   map_link: string | null;
+  line_user_id: string | null;
+  line_display_name: string | null;
 }

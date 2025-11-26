@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    allowedHosts: true, // Allow all hosts (for ngrok/LIFF testing)
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

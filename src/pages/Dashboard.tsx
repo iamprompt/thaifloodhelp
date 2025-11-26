@@ -38,7 +38,6 @@ import { toast } from "sonner";
 import QueryBot from "@/components/QueryBot";
 import { Checkbox } from "@/components/ui/checkbox";
 import ReportHeatmap from "@/components/ReportHeatmap";
-import { PhoneList } from "@/components/PhoneList";
 import { EditReportDialog } from "@/components/EditReportDialog";
 import type { Report } from "@/types/report";
 import { formatCaseId, getUrgencyBadgeClass } from "@/lib/reportUtils";
@@ -151,6 +150,7 @@ const Dashboard = () => {
         'Google Maps Link',
         'วันที่บันทึก',
         'แก้ไขล่าสุด',
+        'บันทึกโดย',
       ];
 
       // Convert data to CSV rows
@@ -178,6 +178,7 @@ const Dashboard = () => {
           report.map_link || '',
           new Date(report.created_at).toLocaleString('th-TH'),
           new Date(report.updated_at).toLocaleString('th-TH'),
+          report.line_display_name || '',
         ].join(',');
       });
 
@@ -299,8 +300,16 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      setReports(data || []);
-      setFilteredReports(data || []);
+      // Map data to ensure line_user_id and line_display_name fields exist
+      // Cast to any to handle fields that may not exist in DB yet
+      const mappedData: Report[] = (data || []).map((report: any) => ({
+        ...report,
+        line_user_id: report.line_user_id ?? null,
+        line_display_name: report.line_display_name ?? null,
+      }));
+
+      setReports(mappedData);
+      setFilteredReports(mappedData);
     } catch (err) {
       console.error('Fetch error:', err);
       toast.error('ไม่สามารถโหลดข้อมูลได้');
@@ -710,6 +719,7 @@ const Dashboard = () => {
                         </div>
                       </TableHead>
                       <TableHead>ความช่วยเหลือ</TableHead>
+                      <TableHead>บันทึกโดย</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -809,10 +819,17 @@ const Dashboard = () => {
                             <TableCell className="max-w-xs truncate">
                               {report.help_needed || '-'}
                             </TableCell>
+                            <TableCell className="max-w-xs truncate">
+                              {report.line_display_name ? (
+                                <span className="text-green-600 dark:text-green-400">
+                                  {report.line_display_name}
+                                </span>
+                              ) : '-'}
+                            </TableCell>
                           </TableRow>
                           {isExpanded && (
                             <TableRow key={`${report.id}-expanded`}>
-                              <TableCell colSpan={12} className="bg-muted/30 p-6">
+                              <TableCell colSpan={16} className="bg-muted/30 p-6">
                                 <div className="space-y-4">
                                   <div className="flex justify-end">
                                     <Button
@@ -897,6 +914,12 @@ const Dashboard = () => {
                                         <p><span className="font-medium">ระดับความเร่งด่วน:</span> {report.urgency_level}</p>
                                         <p className="break-words"><span className="font-medium">วันที่บันทึก:</span> {new Date(report.created_at).toLocaleString('th-TH')}</p>
                                         <p className="break-words"><span className="font-medium">แก้ไขล่าสุด:</span> {new Date(report.updated_at).toLocaleString('th-TH')}</p>
+                                        <p className="break-words">
+                                          <span className="font-medium">บันทึกโดย:</span>{' '}
+                                          {report.line_display_name ? (
+                                            <span className="text-green-600 dark:text-green-400">{report.line_display_name}</span>
+                                          ) : '-'}
+                                        </p>
                                       </div>
                                     </div>
                                   </div>

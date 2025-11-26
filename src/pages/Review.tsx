@@ -12,6 +12,7 @@ import { ArrowLeft, Save, AlertCircle, Loader2, FileText, Sparkles } from "lucid
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
+import { useLiff } from "@/contexts/LiffContext";
 
 
 interface ExtractedData {
@@ -46,6 +47,7 @@ const Review = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
   const [isCompletingAddress, setIsCompletingAddress] = useState(false);
+  const { isLoggedIn, profile } = useLiff();
 
   useEffect(() => {
     const extractedData = location.state?.extractedData;
@@ -164,6 +166,9 @@ const Review = () => {
         number_of_patients: formData.number_of_patients || 0,
         number_of_infants: formData.number_of_infants || 0,
         help_categories: formData.help_categories || [],
+        // Add LINE user data if logged in
+        line_user_id: isLoggedIn && profile ? profile.userId : null,
+        line_display_name: isLoggedIn && profile ? profile.displayName : null,
       };
 
       const { error } = await supabase.from('reports').insert([dataToSave]);
