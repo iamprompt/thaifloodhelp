@@ -230,7 +230,7 @@ const Api = () => {
             <CardDescription>ใช้ URL พื้นฐานนี้สำหรับเรียก API ทั้งหมด</CardDescription>
           </CardHeader>
           <CardContent>
-            <code className="block bg-muted px-4 py-2 rounded text-sm">
+            <code className="block bg-muted px-4 py-2 rounded text-sm break-all overflow-x-auto">
               {API_BASE_URL}
             </code>
           </CardContent>
@@ -555,16 +555,16 @@ const Api = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm">
-              <div className="flex gap-2">
-                <Badge variant="default">200</Badge>
+              <div className="flex gap-2 items-center">
+                <Badge variant="default" className="min-w-[50px] justify-center">200</Badge>
                 <span>Success - การประมวลผลสำเร็จ</span>
               </div>
-              <div className="flex gap-2">
-                <Badge variant="destructive">400</Badge>
+              <div className="flex gap-2 items-center">
+                <Badge variant="destructive" className="min-w-[50px] justify-center">400</Badge>
                 <span>Bad Request - ข้อมูลที่ส่งมาไม่ถูกต้อง</span>
               </div>
-              <div className="flex gap-2">
-                <Badge variant="destructive">500</Badge>
+              <div className="flex gap-2 items-center">
+                <Badge variant="destructive" className="min-w-[50px] justify-center">500</Badge>
                 <span>Internal Server Error - เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์</span>
               </div>
             </div>
