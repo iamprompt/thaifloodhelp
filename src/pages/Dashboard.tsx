@@ -27,7 +27,6 @@ import {
   ChevronLeft,
   Pencil,
   Phone,
-  Share2,
   ArrowLeft,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,20 +39,9 @@ import { EditReportDialog } from "@/components/EditReportDialog";
 import type { Report } from "@/types/report";
 import { formatCaseId, getUrgencyBadgeClass } from "@/lib/reportUtils";
 import { HELP_CATEGORIES } from "@/constants/helpCategories";
-import { useLiff } from "@/contexts/LiffContext";
 import Map from "@/components/ui/map";
 
 const Dashboard = () => {
-  const { shareTargetPicker } = useLiff();
-
-  const handleShare = async () => {
-    try {
-      await shareTargetPicker();
-      toast.success('ขอบคุณที่ช่วยแชร์ครับ');
-    } catch (err) {
-      console.error('Share error:', err);
-    }
-  };
   const navigate = useNavigate();
   const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
@@ -430,15 +418,6 @@ const Dashboard = () => {
             </Button>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={handleShare}
-              size="sm"
-              className="bg-[#06C755] hover:bg-[#05b34c] text-white border-[#06C755] hover:border-[#05b34c]"
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              แชร์ผ่าน LINE
-            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate('/map')}>
               🗺️ แผนที่
             </Button>
