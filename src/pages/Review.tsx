@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Save, AlertCircle, Loader2, FileText, Sparkles, LogIn, Bell, AlertTriangle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DraggableMap } from "@/components/DraggableMap";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
@@ -552,17 +553,21 @@ const Review = () => {
               {formData.location_lat && formData.location_long && 
                formData.location_lat !== '-' && formData.location_long !== '-' ? (
                 <div className="space-y-2">
-                  <div className="rounded-lg overflow-hidden border border-border shadow-sm">
-                    <iframe
-                      src={`https://maps.google.com/maps?q=${formData.location_lat},${formData.location_long}&output=embed&z=15`}
-                      width="100%"
-                      height="300"
-                      style={{ border: 0 }}
-                      allowFullScreen
-                      loading="lazy"
-                      title="Google Maps Location"
-                    />
+                  <div className="text-xs text-muted-foreground mb-2 bg-muted/50 p-2 rounded">
+                    💡 คลิกบนแผนที่หรือลากหมุดเพื่อปรับตำแหน่ง
                   </div>
+                  <DraggableMap
+                    lat={parseFloat(formData.location_lat)}
+                    lng={parseFloat(formData.location_long)}
+                    onPositionChange={(lat, lng) => {
+                      setFormData({
+                        ...formData,
+                        location_lat: lat.toFixed(7),
+                        location_long: lng.toFixed(7),
+                        map_link: `https://maps.google.com/?q=${lat},${lng}`
+                      });
+                    }}
+                  />
                   <Input
                     id="map_link"
                     value={formData.map_link || '-'}
