@@ -25,7 +25,10 @@ const LiffContext = createContext<LiffContextType | undefined>(undefined);
 
 const LIFF_ID = import.meta.env.VITE_LIFF_ID || '';
 
-
+function mobileCheck(): boolean {
+  const userAgent = navigator.userAgent || '';
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+}
 
 export function LiffProvider({ children }: { children: ReactNode }) {
   const [isLiffInitialized, setIsLiffInitialized] = useState(false);
