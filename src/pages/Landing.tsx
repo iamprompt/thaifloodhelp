@@ -94,24 +94,13 @@ const Landing = () => {
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-4 leading-tight px-4"
           >
             Thai Flood Help
-            <br />
-            <span className="text-white/90 text-base sm:text-lg md:text-xl lg:text-2xl block mt-2">
-              รวมข้อมูลที่กระจัดกระจาย ใน Social Media และช่องทางต่างๆ
-            </span>
           </motion.h1>
 
           <motion.p 
             variants={itemVariants}
-            className="text-sm sm:text-base md:text-lg text-white/95 mb-2 md:mb-3 font-medium px-4"
+            className="text-sm sm:text-base md:text-lg text-white/95 mb-2 md:mb-3 font-medium px-4 max-w-4xl mx-auto"
           >
-            สกัดข้อมูลสำคัญด้วย AI เพื่อการช่วยเหลือที่รวดเร็วขึ้น
-          </motion.p>
-
-          <motion.p 
-            variants={itemVariants}
-            className="text-base sm:text-lg md:text-xl text-white/90 mb-2 md:mb-3 font-semibold px-4"
-          >
-            เมื่อ AI กับมนุษย์ ทำงานร่วมกัน เพื่อช่วยผู้ประสบภัย
+            เว็บไซต์ที่ช่วยรวบรวมข้อมูลที่กระจัดกระจายตามช่องทางต่างๆ โดยให้ AI สกัดออกมาเป็นประเด็นสำคัญ เพื่อให้การช่วยเหลือได้รวดเร็วขึ้น
           </motion.p>
 
           <motion.p 
