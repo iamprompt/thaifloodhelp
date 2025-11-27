@@ -272,7 +272,7 @@ export default function HelpBrowse() {
             </TabsTrigger>
             <TabsTrigger value="view-requests" className="gap-2">
               <Eye className="w-4 h-4" />
-              ดูความช่วยเหลือ
+              ดูการขอความช่วยเหลือ
             </TabsTrigger>
             <TabsTrigger value="view-offers" className="gap-2">
               <List className="w-4 h-4" />
