@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, Phone, Clock, User, HandHeart, Users, Eye, List, Upload, X } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Clock, User, HandHeart, Users, Eye, List, Upload, X, Edit, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -69,6 +69,9 @@ export default function HelpBrowse() {
 
   const [loadingRequest, setLoadingRequest] = useState(false);
   const [loadingOffer, setLoadingOffer] = useState(false);
+  const [editingRequest, setEditingRequest] = useState<any>(null);
+  const [editingOffer, setEditingOffer] = useState<any>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data: helpRequests = [], isLoading: loadingRequests, refetch: refetchRequests } = useQuery({
     queryKey: ['help-requests'],
@@ -95,6 +98,42 @@ export default function HelpBrowse() {
       
       if (error) throw error;
       return data;
+    }
+  });
+
+  const { data: myRequests = [], refetch: refetchMyRequests } = useQuery({
+    queryKey: ['my-requests'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('help_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const { data: myOffers = [], refetch: refetchMyOffers } = useQuery({
+    queryKey: ['my-offers'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('help_offers')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'available')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     }
   });
 
@@ -136,23 +175,48 @@ export default function HelpBrowse() {
         }
       }
       
-      const { error } = await supabase
-        .from('help_requests')
-        .insert({
-          title: requestForm.title,
-          description: requestForm.description,
-          help_types: requestForm.helpTypes,
-          budget: requestForm.budget || null,
-          contact_name: requestForm.contactName,
-          contact_phone: phones.length > 0 ? phones : null,
-          contact_method: requestForm.contactMethod || null,
-          location_address: requestForm.locationAddress || null,
-          image_urls: imageUrls.length > 0 ? imageUrls : null
-        });
+      if (editingRequest) {
+        // Update existing request
+        const { error } = await supabase
+          .from('help_requests')
+          .update({
+            title: requestForm.title,
+            description: requestForm.description,
+            help_types: requestForm.helpTypes,
+            budget: requestForm.budget || null,
+            contact_name: requestForm.contactName,
+            contact_phone: phones.length > 0 ? phones : null,
+            contact_method: requestForm.contactMethod || null,
+            location_address: requestForm.locationAddress || null,
+            image_urls: imageUrls.length > 0 ? imageUrls : editingRequest.image_urls
+          })
+          .eq('id', editingRequest.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success('อัพเดทคำขอความช่วยเหลือเรียบร้อยแล้ว');
+        setEditingRequest(null);
+      } else {
+        // Create new request
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const { error } = await supabase
+          .from('help_requests')
+          .insert({
+            title: requestForm.title,
+            description: requestForm.description,
+            help_types: requestForm.helpTypes,
+            budget: requestForm.budget || null,
+            contact_name: requestForm.contactName,
+            contact_phone: phones.length > 0 ? phones : null,
+            contact_method: requestForm.contactMethod || null,
+            location_address: requestForm.locationAddress || null,
+            image_urls: imageUrls.length > 0 ? imageUrls : null,
+            user_id: user?.id || null
+          });
 
-      toast.success('บันทึกคำขอความช่วยเหลือเรียบร้อยแล้ว');
+        if (error) throw error;
+        toast.success('บันทึกคำขอความช่วยเหลือเรียบร้อยแล้ว');
+      }
       setRequestForm({
         title: '',
         description: '',
@@ -165,7 +229,8 @@ export default function HelpBrowse() {
         imageFiles: []
       });
       refetchRequests();
-      setActiveTab('view-requests');
+      refetchMyRequests();
+      setActiveTab('request-form');
     } catch (error) {
       console.error('Error creating help request:', error);
       toast.error('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
@@ -184,23 +249,48 @@ export default function HelpBrowse() {
 
     setLoadingOffer(true);
     try {
-      const { error } = await supabase
-        .from('help_offers')
-        .insert({
-          name: offerForm.name,
-          description: offerForm.description,
-          services_offered: offerForm.servicesOffered,
-          capacity: offerForm.capacity || null,
-          contact_info: offerForm.contactInfo,
-          contact_method: offerForm.contactMethod || null,
-          availability: offerForm.availability || null,
-          location_area: offerForm.locationArea || null,
-          skills: offerForm.skills || null
-        });
+      if (editingOffer) {
+        // Update existing offer
+        const { error } = await supabase
+          .from('help_offers')
+          .update({
+            name: offerForm.name,
+            description: offerForm.description,
+            services_offered: offerForm.servicesOffered,
+            capacity: offerForm.capacity || null,
+            contact_info: offerForm.contactInfo,
+            contact_method: offerForm.contactMethod || null,
+            availability: offerForm.availability || null,
+            location_area: offerForm.locationArea || null,
+            skills: offerForm.skills || null
+          })
+          .eq('id', editingOffer.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success('อัพเดทข้อเสนอความช่วยเหลือเรียบร้อยแล้ว');
+        setEditingOffer(null);
+      } else {
+        // Create new offer
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const { error } = await supabase
+          .from('help_offers')
+          .insert({
+            name: offerForm.name,
+            description: offerForm.description,
+            services_offered: offerForm.servicesOffered,
+            capacity: offerForm.capacity || null,
+            contact_info: offerForm.contactInfo,
+            contact_method: offerForm.contactMethod || null,
+            availability: offerForm.availability || null,
+            location_area: offerForm.locationArea || null,
+            skills: offerForm.skills || null,
+            user_id: user?.id || null
+          });
 
-      toast.success('บันทึกข้อเสนอความช่วยเหลือเรียบร้อยแล้ว');
+        if (error) throw error;
+        toast.success('บันทึกข้อเสนอความช่วยเหลือเรียบร้อยแล้ว');
+      }
       setOfferForm({
         name: '',
         description: '',
@@ -213,7 +303,8 @@ export default function HelpBrowse() {
         skills: ''
       });
       refetchOffers();
-      setActiveTab('view-offers');
+      refetchMyOffers();
+      setActiveTab('offer-form');
     } catch (error) {
       console.error('Error creating help offer:', error);
       toast.error('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
@@ -238,6 +329,82 @@ export default function HelpBrowse() {
         ? prev.servicesOffered.filter(s => s !== service)
         : [...prev.servicesOffered, service]
     }));
+  };
+
+  const handleDeleteRequest = async (id: string) => {
+    if (!confirm('คุณแน่ใจหรือไม่ที่จะลบคำขอความช่วยเหลือนี้?')) return;
+    
+    setDeletingId(id);
+    try {
+      const { error } = await supabase
+        .from('help_requests')
+        .update({ status: 'closed' })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('ลบคำขอความช่วยเหลือเรียบร้อยแล้ว');
+      refetchMyRequests();
+      refetchRequests();
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      toast.error('เกิดข้อผิดพลาด');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleDeleteOffer = async (id: string) => {
+    if (!confirm('คุณแน่ใจหรือไม่ที่จะลบข้อเสนอความช่วยเหลือนี้?')) return;
+    
+    setDeletingId(id);
+    try {
+      const { error } = await supabase
+        .from('help_offers')
+        .update({ status: 'closed' })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('ลบข้อเสนอความช่วยเหลือเรียบร้อยแล้ว');
+      refetchMyOffers();
+      refetchOffers();
+    } catch (error) {
+      console.error('Error deleting offer:', error);
+      toast.error('เกิดข้อผิดพลาด');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const startEditRequest = (request: any) => {
+    setRequestForm({
+      title: request.title,
+      description: request.description,
+      helpTypes: request.help_types || [],
+      budget: request.budget || '',
+      contactName: request.contact_name,
+      contactPhone: request.contact_phone?.join(', ') || '',
+      contactMethod: request.contact_method || '',
+      locationAddress: request.location_address || '',
+      imageFiles: []
+    });
+    setEditingRequest(request);
+  };
+
+  const startEditOffer = (offer: any) => {
+    setOfferForm({
+      name: offer.name,
+      description: offer.description,
+      servicesOffered: offer.services_offered || [],
+      capacity: offer.capacity || '',
+      contactInfo: offer.contact_info,
+      contactMethod: offer.contact_method || '',
+      availability: offer.availability || '',
+      locationArea: offer.location_area || '',
+      skills: offer.skills || ''
+    });
+    setEditingOffer(offer);
   };
 
   return (
@@ -425,11 +592,131 @@ export default function HelpBrowse() {
                     disabled={loadingRequest}
                     className="w-full"
                   >
-                    {loadingRequest ? 'กำลังบันทึก...' : 'ส่งคำขอความช่วยเหลือ'}
+                    {loadingRequest ? 'กำลังบันทึก...' : editingRequest ? 'อัพเดท' : 'ส่งคำขอความช่วยเหลือ'}
                   </Button>
+                  
+                  {editingRequest && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingRequest(null);
+                        setRequestForm({
+                          title: '',
+                          description: '',
+                          helpTypes: [],
+                          budget: '',
+                          contactName: '',
+                          contactPhone: '',
+                          contactMethod: '',
+                          locationAddress: '',
+                          imageFiles: []
+                        });
+                      }}
+                      className="w-full"
+                    >
+                      ยกเลิกการแก้ไข
+                    </Button>
+                  )}
                 </form>
               </CardContent>
             </Card>
+
+            {/* My Requests Cards */}
+            {myRequests.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">คำขอความช่วยเหลือของคุณ</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {myRequests.map((request) => (
+                    <Card key={request.id} className="relative hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between gap-4">
+                          <CardTitle className="text-lg">{request.title}</CardTitle>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => startEditRequest(request)}
+                              disabled={deletingId === request.id}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteRequest(request.id)}
+                              disabled={deletingId === request.id}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {request.description}
+                        </p>
+                        
+                        {request.image_urls && request.image_urls.length > 0 && (
+                          <div className="flex gap-2 overflow-x-auto pb-2">
+                            {request.image_urls.map((url: string, idx: number) => (
+                              <img
+                                key={idx}
+                                src={url}
+                                alt={`รูปภาพ ${idx + 1}`}
+                                className="w-24 h-24 object-cover rounded border cursor-pointer hover:opacity-80"
+                                onClick={() => window.open(url, '_blank')}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        
+                        {request.help_types && request.help_types.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {request.help_types.map((type: string) => (
+                              <Badge key={type} variant="secondary" className="text-xs">
+                                {type}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <User className="w-4 h-4" />
+                            <span>{request.contact_name}</span>
+                          </div>
+                          
+                          {request.contact_phone && request.contact_phone.length > 0 && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Phone className="w-4 h-4" />
+                              <span>{request.contact_phone.join(', ')}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              {formatDistanceToNow(new Date(request.created_at!), {
+                                addSuffix: true,
+                                locale: th
+                              })}
+                            </span>
+                          </div>
+                        </div>
+
+                        {request.budget && (
+                          <div className="pt-2 border-t">
+                            <span className="text-sm font-medium">งบประมาณ: </span>
+                            <span className="text-sm text-muted-foreground">{request.budget}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* Offer Form Tab */}
@@ -558,11 +845,124 @@ export default function HelpBrowse() {
                     disabled={loadingOffer}
                     className="w-full"
                   >
-                    {loadingOffer ? 'กำลังบันทึก...' : 'ส่งข้อเสนอความช่วยเหลือ'}
+                    {loadingOffer ? 'กำลังบันทึก...' : editingOffer ? 'อัพเดท' : 'ส่งข้อเสนอความช่วยเหลือ'}
                   </Button>
+                  
+                  {editingOffer && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingOffer(null);
+                        setOfferForm({
+                          name: '',
+                          description: '',
+                          servicesOffered: [],
+                          capacity: '',
+                          contactInfo: '',
+                          contactMethod: '',
+                          availability: '',
+                          locationArea: '',
+                          skills: ''
+                        });
+                      }}
+                      className="w-full"
+                    >
+                      ยกเลิกการแก้ไข
+                    </Button>
+                  )}
                 </form>
               </CardContent>
             </Card>
+
+            {/* My Offers Cards */}
+            {myOffers.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">ข้อเสนอความช่วยเหลือของคุณ</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {myOffers.map((offer) => (
+                    <Card key={offer.id} className="relative hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between gap-4">
+                          <CardTitle className="text-lg">{offer.name}</CardTitle>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => startEditOffer(offer)}
+                              disabled={deletingId === offer.id}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteOffer(offer.id)}
+                              disabled={deletingId === offer.id}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {offer.description}
+                        </p>
+                        
+                        {offer.services_offered && offer.services_offered.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {offer.services_offered.map((service: string) => (
+                              <Badge key={service} variant="secondary" className="text-xs">
+                                {service}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="space-y-2 text-sm">
+                          {offer.capacity && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Users className="w-4 h-4" />
+                              <span>{offer.capacity}</span>
+                            </div>
+                          )}
+                          
+                          {offer.skills && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <span className="font-medium">ทักษะ:</span>
+                              <span>{offer.skills}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Phone className="w-4 h-4" />
+                            <span>{offer.contact_info}</span>
+                          </div>
+                          
+                          {offer.location_area && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <MapPin className="w-4 h-4" />
+                              <span>{offer.location_area}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              {formatDistanceToNow(new Date(offer.created_at!), {
+                                addSuffix: true,
+                                locale: th
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* View Requests Tab */}
