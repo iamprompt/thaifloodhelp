@@ -438,6 +438,96 @@ export default function HelpBrowse() {
 
           {/* Request Form Tab */}
           <TabsContent value="request-form">
+            {/* My Requests Cards - show above the form so it's immediately visible */}
+            {myRequests.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-4">คำขอความช่วยเหลือของคุณ</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {myRequests.map((request) => (
+                    <Card key={request.id} className="relative hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between gap-4">
+                          <CardTitle className="text-lg">{request.title}</CardTitle>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => startEditRequest(request)}
+                              disabled={deletingId === request.id}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteRequest(request.id)}
+                              disabled={deletingId === request.id}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {request.description}
+                        </p>
+                        {request.image_urls && request.image_urls.length > 0 && (
+                          <div className="flex gap-2 overflow-x-auto pb-2">
+                            {request.image_urls.map((url: string, idx: number) => (
+                              <img
+                                key={idx}
+                                src={url}
+                                alt={`รูปภาพ ${idx + 1}`}
+                                className="w-24 h-24 object-cover rounded border cursor-pointer hover:opacity-80"
+                                onClick={() => window.open(url, '_blank')}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        {request.help_types && request.help_types.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {request.help_types.map((type: string) => (
+                              <Badge key={type} variant="secondary" className="text-xs">
+                                {type}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <User className="w-4 h-4" />
+                            <span>{request.contact_name}</span>
+                          </div>
+                          {request.contact_phone && request.contact_phone.length > 0 && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Phone className="w-4 h-4" />
+                              <span>{request.contact_phone.join(', ')}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              {formatDistanceToNow(new Date(request.created_at!), {
+                                addSuffix: true,
+                                locale: th
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        {request.budget && (
+                          <div className="pt-2 border-t">
+                            <span className="text-sm font-medium">งบประมาณ: </span>
+                            <span className="text-sm text-muted-foreground">{request.budget}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>ขอความช่วยเหลือ</CardTitle>
@@ -594,7 +684,7 @@ export default function HelpBrowse() {
                   >
                     {loadingRequest ? 'กำลังบันทึก...' : editingRequest ? 'อัพเดท' : 'ส่งคำขอความช่วยเหลือ'}
                   </Button>
-                  
+
                   {editingRequest && (
                     <Button
                       type="button"
@@ -621,102 +711,6 @@ export default function HelpBrowse() {
                 </form>
               </CardContent>
             </Card>
-
-            {/* My Requests Cards */}
-            {myRequests.length > 0 && (
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold mb-4">คำขอความช่วยเหลือของคุณ</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {myRequests.map((request) => (
-                    <Card key={request.id} className="relative hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <div className="flex items-start justify-between gap-4">
-                          <CardTitle className="text-lg">{request.title}</CardTitle>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => startEditRequest(request)}
-                              disabled={deletingId === request.id}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteRequest(request.id)}
-                              disabled={deletingId === request.id}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {request.description}
-                        </p>
-                        
-                        {request.image_urls && request.image_urls.length > 0 && (
-                          <div className="flex gap-2 overflow-x-auto pb-2">
-                            {request.image_urls.map((url: string, idx: number) => (
-                              <img
-                                key={idx}
-                                src={url}
-                                alt={`รูปภาพ ${idx + 1}`}
-                                className="w-24 h-24 object-cover rounded border cursor-pointer hover:opacity-80"
-                                onClick={() => window.open(url, '_blank')}
-                              />
-                            ))}
-                          </div>
-                        )}
-                        
-                        {request.help_types && request.help_types.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {request.help_types.map((type: string) => (
-                              <Badge key={type} variant="secondary" className="text-xs">
-                                {type}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <User className="w-4 h-4" />
-                            <span>{request.contact_name}</span>
-                          </div>
-                          
-                          {request.contact_phone && request.contact_phone.length > 0 && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Phone className="w-4 h-4" />
-                              <span>{request.contact_phone.join(', ')}</span>
-                            </div>
-                          )}
-                          
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              {formatDistanceToNow(new Date(request.created_at!), {
-                                addSuffix: true,
-                                locale: th
-                              })}
-                            </span>
-                          </div>
-                        </div>
-
-                        {request.budget && (
-                          <div className="pt-2 border-t">
-                            <span className="text-sm font-medium">งบประมาณ: </span>
-                            <span className="text-sm text-muted-foreground">{request.budget}</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
           </TabsContent>
 
           {/* Offer Form Tab */}
