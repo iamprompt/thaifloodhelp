@@ -79,6 +79,114 @@ export type Database = {
           },
         ]
       }
+      help_offers: {
+        Row: {
+          availability: string | null
+          capacity: string | null
+          contact_info: string
+          contact_method: string | null
+          created_at: string | null
+          description: string
+          id: string
+          location_area: string | null
+          name: string
+          services_offered: string[] | null
+          skills: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          availability?: string | null
+          capacity?: string | null
+          contact_info: string
+          contact_method?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          location_area?: string | null
+          name: string
+          services_offered?: string[] | null
+          skills?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          availability?: string | null
+          capacity?: string | null
+          contact_info?: string
+          contact_method?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          location_area?: string | null
+          name?: string
+          services_offered?: string[] | null
+          skills?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      help_requests: {
+        Row: {
+          budget: string | null
+          contact_method: string | null
+          contact_name: string
+          contact_phone: string[] | null
+          created_at: string | null
+          description: string
+          help_types: string[] | null
+          id: string
+          image_urls: string[] | null
+          location_address: string | null
+          location_lat: number | null
+          location_long: number | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          budget?: string | null
+          contact_method?: string | null
+          contact_name: string
+          contact_phone?: string[] | null
+          created_at?: string | null
+          description: string
+          help_types?: string[] | null
+          id?: string
+          image_urls?: string[] | null
+          location_address?: string | null
+          location_lat?: number | null
+          location_long?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          budget?: string | null
+          contact_method?: string | null
+          contact_name?: string
+          contact_phone?: string[] | null
+          created_at?: string | null
+          description?: string
+          help_types?: string[] | null
+          id?: string
+          image_urls?: string[] | null
+          location_address?: string | null
+          location_lat?: number | null
+          location_long?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       line_sessions: {
         Row: {
           created_at: string | null

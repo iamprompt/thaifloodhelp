@@ -13,6 +13,9 @@ import Api from './pages/Api'
 import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
 import Help from './pages/Help'
+import HelpBrowse from './pages/HelpBrowse'
+import HelpOffer from './pages/HelpOffer'
+import HelpRequest from './pages/HelpRequest'
 import Input from './pages/Input'
 import Landing from './pages/Landing'
 import Map from './pages/Map'
@@ -68,6 +71,9 @@ const AppContent = () => {
           <Route path="/api" element={<Api />} />
           <Route path="/mission" element={<Mission />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/help-request" element={<HelpRequest />} />
+          <Route path="/help-offer" element={<HelpOffer />} />
+          <Route path="/help-browse" element={<HelpBrowse />} />
           <Route path="/privacy" element={<Privacy />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
