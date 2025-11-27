@@ -715,6 +715,89 @@ export default function HelpBrowse() {
 
           {/* Offer Form Tab */}
           <TabsContent value="offer-form">
+            {/* My Offers Cards - show above the form so it's immediately visible */}
+            {myOffers.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-4">ข้อเสนอความช่วยเหลือของคุณ</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {myOffers.map((offer) => (
+                    <Card key={offer.id} className="relative hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between gap-4">
+                          <CardTitle className="text-lg">{offer.name}</CardTitle>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => startEditOffer(offer)}
+                              disabled={deletingId === offer.id}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteOffer(offer.id)}
+                              disabled={deletingId === offer.id}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {offer.description}
+                        </p>
+                        {offer.services_offered && offer.services_offered.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {offer.services_offered.map((service: string) => (
+                              <Badge key={service} variant="secondary" className="text-xs">
+                                {service}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        <div className="space-y-2 text-sm">
+                          {offer.capacity && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Users className="w-4 h-4" />
+                              <span>{offer.capacity}</span>
+                            </div>
+                          )}
+                          {offer.skills && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <span className="font-medium">ทักษะ:</span>
+                              <span>{offer.skills}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Phone className="w-4 h-4" />
+                            <span>{offer.contact_info}</span>
+                          </div>
+                          {offer.location_area && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <MapPin className="w-4 h-4" />
+                              <span>{offer.location_area}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              {formatDistanceToNow(new Date(offer.created_at!), {
+                                addSuffix: true,
+                                locale: th
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>เสนอให้ความช่วยเหลือ</CardTitle>
@@ -841,7 +924,7 @@ export default function HelpBrowse() {
                   >
                     {loadingOffer ? 'กำลังบันทึก...' : editingOffer ? 'อัพเดท' : 'ส่งข้อเสนอความช่วยเหลือ'}
                   </Button>
-                  
+
                   {editingOffer && (
                     <Button
                       type="button"
@@ -868,95 +951,6 @@ export default function HelpBrowse() {
                 </form>
               </CardContent>
             </Card>
-
-            {/* My Offers Cards */}
-            {myOffers.length > 0 && (
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold mb-4">ข้อเสนอความช่วยเหลือของคุณ</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {myOffers.map((offer) => (
-                    <Card key={offer.id} className="relative hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <div className="flex items-start justify-between gap-4">
-                          <CardTitle className="text-lg">{offer.name}</CardTitle>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => startEditOffer(offer)}
-                              disabled={deletingId === offer.id}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteOffer(offer.id)}
-                              disabled={deletingId === offer.id}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {offer.description}
-                        </p>
-                        
-                        {offer.services_offered && offer.services_offered.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {offer.services_offered.map((service: string) => (
-                              <Badge key={service} variant="secondary" className="text-xs">
-                                {service}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="space-y-2 text-sm">
-                          {offer.capacity && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Users className="w-4 h-4" />
-                              <span>{offer.capacity}</span>
-                            </div>
-                          )}
-                          
-                          {offer.skills && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <span className="font-medium">ทักษะ:</span>
-                              <span>{offer.skills}</span>
-                            </div>
-                          )}
-                          
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone className="w-4 h-4" />
-                            <span>{offer.contact_info}</span>
-                          </div>
-                          
-                          {offer.location_area && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <MapPin className="w-4 h-4" />
-                              <span>{offer.location_area}</span>
-                            </div>
-                          )}
-                          
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              {formatDistanceToNow(new Date(offer.created_at!), {
-                                addSuffix: true,
-                                locale: th
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
           </TabsContent>
 
           {/* View Requests Tab */}
