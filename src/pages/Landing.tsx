@@ -88,28 +88,20 @@ const Landing = () => {
           {/* Dynamic Description based on mode */}
           {mode === 'during' ? (
             <>
-              <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white mb-2 md:mb-3 font-medium px-4 max-w-4xl mx-auto drop-shadow-md [text-shadow:_0_1px_8px_rgb(0_0_0_/_50%)]">
-                เว็บไซต์ที่ช่วยรวบรวมข้อมูลที่กระจัดกระจายตามช่องทางต่างๆ
+              <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white mb-6 md:mb-8 font-medium px-4 max-w-4xl mx-auto drop-shadow-md [text-shadow:_0_1px_8px_rgb(0_0_0_/_50%)]">
+                ช่วยกันรวบรวมข้อมูลที่กระจัดกระจายตามช่องทางต่างๆ
                 <br />
                 โดยให้ AI สกัดออกมาเป็นประเด็นสำคัญ
                 เพื่อให้การช่วยเหลือได้รวดเร็วขึ้น
               </motion.p>
-
-              <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white/90 mb-4 md:mb-6 px-4 drop-shadow-md [text-shadow:_0_1px_6px_rgb(0_0_0_/_50%)]">
-                ทุกวินาที • มีคนรอความช่วยเหลือ
-              </motion.p>
             </>
           ) : (
             <>
-              <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white mb-2 md:mb-3 font-medium px-4 max-w-4xl mx-auto drop-shadow-md [text-shadow:_0_1px_8px_rgb(0_0_0_/_50%)]">
+              <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white mb-6 md:mb-8 font-medium px-4 max-w-4xl mx-auto drop-shadow-md [text-shadow:_0_1px_8px_rgb(0_0_0_/_50%)]">
                 แพลตฟอร์มเชื่อมโยงผู้ประสบภัยกับอาสาสมัคร
                 <br />
                 โพสต์ความต้องการหรือเสนอความช่วยเหลือ
                 เพื่อฟื้นฟูชีวิตหลังน้ำลด
-              </motion.p>
-
-              <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white/90 mb-4 md:mb-6 px-4 drop-shadow-md [text-shadow:_0_1px_6px_rgb(0_0_0_/_50%)]">
-                ร่วมกันสร้างชุมชนที่แข็งแรง
               </motion.p>
             </>
           )}
